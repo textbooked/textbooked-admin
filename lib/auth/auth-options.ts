@@ -2,8 +2,6 @@ import { SignJWT } from "jose";
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-import { isAdminEmail } from "@/lib/admin/guard";
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -16,20 +14,6 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user, profile }) {
-      const userEmail = resolveNonEmptyString(user?.email);
-      const profileEmail =
-        profile && typeof profile === "object"
-          ? readString(profile as Record<string, unknown>, ["email"])
-          : undefined;
-
-      const email = (userEmail ?? profileEmail)?.toLowerCase();
-      if (!email || !isAdminEmail(email)) {
-        return "/forbidden";
-      }
-
-      return true;
-    },
     async jwt({ token, profile }) {
       if (profile && typeof profile === "object") {
         const oauthProfile = profile as Record<string, unknown>;

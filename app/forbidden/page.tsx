@@ -1,11 +1,13 @@
 import { AlertTriangle } from "lucide-react";
 
+import { ForbiddenAutoSignOut } from "@/components/auth/forbidden-auto-signout";
 import { ForbiddenLoginButton } from "@/components/auth/forbidden-login-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ForbiddenPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-8">
+      <ForbiddenAutoSignOut />
       <Card className="w-full max-w-lg rounded-2xl border shadow-lg shadow-black/5">
         <CardHeader className="pb-0">
           <div className="flex items-center gap-3">

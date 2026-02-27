@@ -1,23 +1,12 @@
-import { redirect } from "next/navigation";
-
 import { Header } from "@/components/app-shell/header";
 import { Sidebar } from "@/components/app-shell/sidebar";
 import { AdminBackendTokenSync } from "@/components/auth/admin-backend-token-sync";
-import { isAllowlistedSession } from "@/lib/admin/guard";
-import { getAuthSession } from "@/lib/auth/session";
+import { requireBackendAdminAccess } from "@/lib/auth/admin-access";
 
 import type { ReactNode } from "react";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const session = await getAuthSession();
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  if (!isAllowlistedSession(session)) {
-    redirect("/forbidden");
-  }
+  await requireBackendAdminAccess();
 
   return (
     <div className="min-h-screen">
