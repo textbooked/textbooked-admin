@@ -6,24 +6,36 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  AdminCreateDto,
+  AdminListDto,
+  AdminUpdateDto,
   CurrentAdminUserDto
 } from './schemas';
 
 import adminAuthGetMeMutator from '../axios';
+import knowledgeAreaAdminListMutator from '../axios';
+import knowledgeAreaAdminGetOneMutator from '../axios';
+import knowledgeAreaAdminUpdateMutator from '../axios';
+import knowledgeAreaAdminRemoveMutator from '../axios';
+import knowledgeAreaAdminCreateMutator from '../axios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -112,3 +124,348 @@ export function useAdminAuthGetMe<TData = Awaited<ReturnType<typeof adminAuthGet
 
 
 
+/**
+ * @summary List records for an admin-managed entity
+ */
+export const knowledgeAreaAdminList = (
+    adminListDto: AdminListDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminListMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return knowledgeAreaAdminListMutator<void>(
+      {url: `/admin/knowledge-area/list`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminListDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getKnowledgeAreaAdminListMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminListMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminList>>, TError,{data: AdminListDto}, TContext> => {
+    
+const mutationKey = ['knowledgeAreaAdminList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeAreaAdminList>>, {data: AdminListDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  knowledgeAreaAdminList(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeAreaAdminListMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeAreaAdminList>>>
+    export type KnowledgeAreaAdminListMutationBody = AdminListDto
+    export type KnowledgeAreaAdminListMutationError = void
+
+    /**
+ * @summary List records for an admin-managed entity
+ */
+export const useKnowledgeAreaAdminList = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminListMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeAreaAdminList>>,
+        TError,
+        {data: AdminListDto},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeAreaAdminListMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get one record by id
+ */
+export const knowledgeAreaAdminGetOne = (
+    id: string,
+ options?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return knowledgeAreaAdminGetOneMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getKnowledgeAreaAdminGetOneQueryKey = (id: string,) => {
+    return [`/admin/knowledge-area/${id}`] as const;
+    }
+
+    
+export const getKnowledgeAreaAdminGetOneQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeAreaAdminGetOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>> = ({ signal }) => knowledgeAreaAdminGetOne(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type KnowledgeAreaAdminGetOneQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>>
+export type KnowledgeAreaAdminGetOneQueryError = void
+
+
+export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
+
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>,
+          TError,
+          Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get one record by id
+ */
+
+export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getKnowledgeAreaAdminGetOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update a record by id
+ */
+export const knowledgeAreaAdminUpdate = (
+    id: string,
+    adminUpdateDto: AdminUpdateDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>,) => {
+      
+      
+      return knowledgeAreaAdminUpdateMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateDto
+    },
+      options);
+    }
+  
+
+
+export const getKnowledgeAreaAdminUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext> => {
+    
+const mutationKey = ['knowledgeAreaAdminUpdate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>, {id: string;data: AdminUpdateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  knowledgeAreaAdminUpdate(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeAreaAdminUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>>
+    export type KnowledgeAreaAdminUpdateMutationBody = AdminUpdateDto
+    export type KnowledgeAreaAdminUpdateMutationError = void
+
+    /**
+ * @summary Update a record by id
+ */
+export const useKnowledgeAreaAdminUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>,
+        TError,
+        {id: string;data: AdminUpdateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeAreaAdminUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Delete a record by id
+ */
+export const knowledgeAreaAdminRemove = (
+    id: string,
+ options?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>,) => {
+      
+      
+      return knowledgeAreaAdminRemoveMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getKnowledgeAreaAdminRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>, TError,{id: string}, TContext> => {
+    
+const mutationKey = ['knowledgeAreaAdminRemove'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  knowledgeAreaAdminRemove(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeAreaAdminRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>>
+    
+    export type KnowledgeAreaAdminRemoveMutationError = void
+
+    /**
+ * @summary Delete a record by id
+ */
+export const useKnowledgeAreaAdminRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeAreaAdminRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Create a record
+ */
+export const knowledgeAreaAdminCreate = (
+    adminCreateDto: AdminCreateDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return knowledgeAreaAdminCreateMutator<void>(
+      {url: `/admin/knowledge-area`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getKnowledgeAreaAdminCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>, TError,{data: AdminCreateDto}, TContext> => {
+    
+const mutationKey = ['knowledgeAreaAdminCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>, {data: AdminCreateDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  knowledgeAreaAdminCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type KnowledgeAreaAdminCreateMutationResult = NonNullable<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>>
+    export type KnowledgeAreaAdminCreateMutationBody = AdminCreateDto
+    export type KnowledgeAreaAdminCreateMutationError = void
+
+    /**
+ * @summary Create a record
+ */
+export const useKnowledgeAreaAdminCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>,
+        TError,
+        {data: AdminCreateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getKnowledgeAreaAdminCreateMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

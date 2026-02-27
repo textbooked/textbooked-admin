@@ -6,10 +6,18 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  AdminCreateDto,
+  AdminListDto,
+  AdminUpdateDto,
   CurrentAdminUserDto
 } from './schemas';
 
 import adminAuthGetMeMutator from '../axios';
+import knowledgeAreaAdminListMutator from '../axios';
+import knowledgeAreaAdminGetOneMutator from '../axios';
+import knowledgeAreaAdminUpdateMutator from '../axios';
+import knowledgeAreaAdminRemoveMutator from '../axios';
+import knowledgeAreaAdminCreateMutator from '../axios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -25,5 +33,77 @@ const adminAuthGetMe = (
       options);
     }
   
-return {adminAuthGetMe}};
+/**
+ * @summary List records for an admin-managed entity
+ */
+const knowledgeAreaAdminList = (
+    adminListDto: AdminListDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminListMutator>,) => {
+      return knowledgeAreaAdminListMutator<void>(
+      {url: `/admin/knowledge-area/list`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminListDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Get one record by id
+ */
+const knowledgeAreaAdminGetOne = (
+    id: string,
+ options?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>,) => {
+      return knowledgeAreaAdminGetOneMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'GET'
+    },
+      options);
+    }
+  
+/**
+ * @summary Update a record by id
+ */
+const knowledgeAreaAdminUpdate = (
+    id: string,
+    adminUpdateDto: AdminUpdateDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>,) => {
+      return knowledgeAreaAdminUpdateMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Delete a record by id
+ */
+const knowledgeAreaAdminRemove = (
+    id: string,
+ options?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>,) => {
+      return knowledgeAreaAdminRemoveMutator<void>(
+      {url: `/admin/knowledge-area/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+/**
+ * @summary Create a record
+ */
+const knowledgeAreaAdminCreate = (
+    adminCreateDto: AdminCreateDto,
+ options?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>,) => {
+      return knowledgeAreaAdminCreateMutator<void>(
+      {url: `/admin/knowledge-area`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateDto
+    },
+      options);
+    }
+  
+return {adminAuthGetMe,knowledgeAreaAdminList,knowledgeAreaAdminGetOne,knowledgeAreaAdminUpdate,knowledgeAreaAdminRemove,knowledgeAreaAdminCreate}};
 export type AdminAuthGetMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['adminAuthGetMe']>>>
+export type KnowledgeAreaAdminListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminList']>>>
+export type KnowledgeAreaAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminGetOne']>>>
+export type KnowledgeAreaAdminUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminUpdate']>>>
+export type KnowledgeAreaAdminRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminRemove']>>>
+export type KnowledgeAreaAdminCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminCreate']>>>
