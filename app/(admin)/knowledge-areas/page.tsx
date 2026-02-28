@@ -2,19 +2,36 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ColumnDef } from "@tanstack/react-table";
-import { FolderPlus, Layers } from "lucide-react";
-import { useState } from "react";
+import type { AxiosError } from "axios";
+import { ChevronDown, FolderPlus, Loader2, Pencil, RefreshCcw, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { FormCommaListField } from "@/components/forms/form-comma-list-field";
 import { FormTextField } from "@/components/forms/form-text-field";
 import { FormTextareaField } from "@/components/forms/form-textarea-field";
+import {
+  useKnowledgeAreaAdminCreate,
+  useKnowledgeAreaAdminList,
+  useKnowledgeAreaAdminRemove,
+  useKnowledgeAreaAdminUpdate,
+} from "@/lib/api/generated/admin-client";
+import type { AdminCreateDto, AdminListDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
+import { getApiErrorMessage, type ApiErrorBody } from "@/lib/api/get-api-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import {
   Sheet,
   SheetContent,
@@ -25,56 +42,150 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+const KNOWLEDGE_AREA_KINDS = ["DOMAIN", "TOPIC", "TOOL", "LANGUAGE"] as const;
+
+type KnowledgeAreaKind = (typeof KNOWLEDGE_AREA_KINDS)[number];
 type KnowledgeAreaRow = {
   id: string;
   name: string;
   slug: string;
+  kind: KnowledgeAreaKind;
   aliases: string[];
-  description?: string;
+  description?: string | null;
   updatedAt: string;
+};
+
+type AdminListResponse<T> = {
+  data: T[];
+  total: number;
 };
 
 const knowledgeAreaSchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
+  kind: z.enum(KNOWLEDGE_AREA_KINDS),
   aliases: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
 });
 
 type KnowledgeAreaFormValues = z.infer<typeof knowledgeAreaSchema>;
 
-const initialKnowledgeAreas: KnowledgeAreaRow[] = [
-  {
-    id: "ka1",
-    name: "Classical Mechanics",
-    slug: "classical-mechanics",
-    aliases: ["mechanics"],
-    description: "Motion, force, energy, and momentum concepts.",
-    updatedAt: "2026-02-20T09:00:00.000Z",
-  },
-  {
-    id: "ka2",
-    name: "Cell Biology",
-    slug: "cell-biology",
-    aliases: ["cells"],
-    description: "Cell structure, function, transport, and metabolism.",
-    updatedAt: "2026-02-25T07:22:00.000Z",
-  },
-];
+const defaultValues: KnowledgeAreaFormValues = {
+  name: "",
+  slug: "",
+  kind: "TOPIC",
+  aliases: "",
+  description: "",
+};
 
 export default function KnowledgeAreasPage() {
-  const [rows, setRows] = useState<KnowledgeAreaRow[]>(initialKnowledgeAreas);
-  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<KnowledgeAreaRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeRow, setActiveRow] = useState<KnowledgeAreaRow | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const listMutation = useKnowledgeAreaAdminList<AxiosError<ApiErrorBody>>();
+  const createMutation = useKnowledgeAreaAdminCreate<AxiosError<ApiErrorBody>>();
+  const updateMutation = useKnowledgeAreaAdminUpdate<AxiosError<ApiErrorBody>>();
+  const removeMutation = useKnowledgeAreaAdminRemove<AxiosError<ApiErrorBody>>();
 
   const form = useForm<KnowledgeAreaFormValues>({
     resolver: zodResolver(knowledgeAreaSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      aliases: "",
-      description: "",
-    },
+    defaultValues,
   });
+
+  const isLoading = listMutation.isPending && rows.length === 0;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  async function loadRows() {
+    try {
+      const payload: AdminListDto = {
+        pagination: { page: 1, perPage: 100 },
+        sort: { field: "updatedAt", order: "DESC" },
+      };
+      const result =
+        (await listMutation.mutateAsync({ data: payload })) as unknown as AdminListResponse<KnowledgeAreaRow>;
+
+      setRows(Array.isArray(result?.data) ? result.data : []);
+      setTotal(typeof result?.total === "number" ? result.total : result?.data?.length ?? 0);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to load knowledge areas."));
+    }
+  }
+
+  useEffect(() => {
+    void loadRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function openCreate() {
+    setActiveRow(null);
+    form.reset(defaultValues);
+    setSheetOpen(true);
+  }
+
+  function openEdit(row: KnowledgeAreaRow) {
+    setActiveRow(row);
+    form.reset({
+      name: row.name,
+      slug: row.slug,
+      kind: row.kind,
+      aliases: row.aliases.join(", "),
+      description: row.description ?? "",
+    });
+    setSheetOpen(true);
+  }
+
+  function closeSheet() {
+    setActiveRow(null);
+    form.reset(defaultValues);
+    setSheetOpen(false);
+  }
+
+  async function handleDelete(row: KnowledgeAreaRow) {
+    if (!window.confirm(`Delete knowledge area "${row.name}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(row.id);
+      await removeMutation.mutateAsync({ id: row.id });
+      toast.success("Knowledge area deleted.");
+      await loadRows();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to delete knowledge area."));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function onSubmit(values: KnowledgeAreaFormValues) {
+    const data = {
+      name: values.name.trim(),
+      slug: values.slug.trim(),
+      kind: values.kind,
+      aliases: splitAliases(values.aliases),
+      description: toNullable(values.description),
+    };
+
+    try {
+      if (activeRow) {
+        const payload: AdminUpdateDto = { data };
+        await updateMutation.mutateAsync({ id: activeRow.id, data: payload });
+        toast.success("Knowledge area updated.");
+      } else {
+        const payload: AdminCreateDto = { data };
+        await createMutation.mutateAsync({ data: payload });
+        toast.success("Knowledge area created.");
+      }
+
+      closeSheet();
+      await loadRows();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to save knowledge area."));
+    }
+  }
 
   const columns: ColumnDef<KnowledgeAreaRow>[] = [
     {
@@ -83,15 +194,22 @@ export default function KnowledgeAreasPage() {
       cell: ({ row }) => (
         <div className="space-y-1">
           <div className="font-medium">{row.original.name}</div>
-          <div className="flex flex-wrap gap-1">
-            {row.original.aliases.map((alias) => (
-              <Badge key={alias} variant="outline" className="rounded-lg">
-                {alias}
-              </Badge>
-            ))}
-          </div>
+          {row.original.aliases.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {row.original.aliases.map((alias) => (
+                <Badge key={alias} variant="outline" className="rounded-lg">
+                  {alias}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
         </div>
       ),
+    },
+    {
+      accessorKey: "kind",
+      header: "Kind",
+      cell: ({ row }) => <Badge className="rounded-lg">{row.original.kind}</Badge>,
     },
     {
       accessorKey: "slug",
@@ -108,38 +226,30 @@ export default function KnowledgeAreasPage() {
     {
       id: "actions",
       header: "Actions",
-      cell: () => (
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" className="rounded-lg">
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => openEdit(row.original)}>
+            <Pencil className="size-4" />
             Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-destructive hover:text-destructive"
+            disabled={deletingId === row.original.id}
+            onClick={() => void handleDelete(row.original)}
+          >
+            {deletingId === row.original.id ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4" />
+            )}
+            Delete
           </Button>
         </div>
       ),
     },
   ];
-
-  async function onSubmit(values: KnowledgeAreaFormValues) {
-    const aliases = values.aliases
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    // TODO: Replace local state with Orval-generated hooks once knowledge-area endpoints exist.
-    setRows((prev) => [
-      {
-        id: crypto.randomUUID(),
-        name: values.name,
-        slug: values.slug,
-        aliases,
-        description: values.description || undefined,
-        updatedAt: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
-
-    form.reset();
-    setOpen(false);
-  }
 
   return (
     <div className="space-y-6">
@@ -149,34 +259,49 @@ export default function KnowledgeAreasPage() {
             <CardTitle className="flex items-center gap-2">
               Knowledge Areas
               <Badge variant="outline" className="rounded-lg">
-                Skeleton
+                Live API
               </Badge>
             </CardTitle>
-            <CardDescription>
-              Same workflow pattern as concepts with a separate local dataset and form schema.
-            </CardDescription>
+            <CardDescription>Connected to admin CRUD endpoints via generated Orval hooks.</CardDescription>
           </div>
 
-          <Sheet open={open} onOpenChange={setOpen}>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="rounded-lg">
+              {total} total
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => void loadRows()}
+              disabled={listMutation.isPending}
+            >
+              {listMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="size-4" />
+              )}
+              Refresh
+            </Button>
+          </div>
+
+          <Sheet open={sheetOpen} onOpenChange={(open) => (open ? setSheetOpen(true) : closeSheet())}>
             <SheetTrigger asChild>
-              <Button className="rounded-xl">
+              <Button className="rounded-xl" onClick={openCreate}>
                 <FolderPlus className="size-4" />
                 Create Knowledge Area
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:max-w-xl">
               <SheetHeader>
-                <SheetTitle>Create Knowledge Area</SheetTitle>
+                <SheetTitle>{activeRow ? "Edit Knowledge Area" : "Create Knowledge Area"}</SheetTitle>
                 <SheetDescription>
-                  Placeholder form for admin editorial workflows.
+                  Manage canonical knowledge area records used across admin workflows.
                 </SheetDescription>
               </SheetHeader>
 
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex h-full flex-col gap-4 px-4 pb-4"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col gap-4 px-4 pb-4">
                   <FormTextField control={form.control} name="name" label="Name" />
                   <FormTextField
                     control={form.control}
@@ -184,6 +309,40 @@ export default function KnowledgeAreasPage() {
                     label="Slug"
                     placeholder="organic-chemistry"
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="kind"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kind</FormLabel>
+                        <FormControl>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button type="button" variant="outline" className="w-full justify-between rounded-md font-normal">
+                                {field.value}
+                                <ChevronDown className="size-4 opacity-60" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-56">
+                              <DropdownMenuRadioGroup
+                                value={field.value}
+                                onValueChange={(value) => field.onChange(value as KnowledgeAreaKind)}
+                              >
+                                {KNOWLEDGE_AREA_KINDS.map((kind) => (
+                                  <DropdownMenuRadioItem key={kind} value={kind}>
+                                    {kind}
+                                  </DropdownMenuRadioItem>
+                                ))}
+                              </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormCommaListField control={form.control} name="aliases" label="Aliases" />
                   <FormTextareaField
                     control={form.control}
@@ -193,24 +352,12 @@ export default function KnowledgeAreasPage() {
                     placeholder="What concept cluster does this knowledge area cover?"
                   />
 
-                  <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground">
-                    <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
-                      <Layers className="size-3.5" />
-                      Local-only stub
-                    </div>
-                    Submit adds a row locally. Replace with Orval mutations later.
-                  </div>
-
                   <SheetFooter className="mt-auto px-0 pb-0">
-                    <Button type="submit" className="rounded-xl">
-                      Save Knowledge Area
+                    <Button type="submit" className="rounded-xl" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+                      {activeRow ? "Save Changes" : "Save Knowledge Area"}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => setOpen(false)}
-                    >
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={closeSheet}>
                       Cancel
                     </Button>
                   </SheetFooter>
@@ -220,16 +367,37 @@ export default function KnowledgeAreasPage() {
           </Sheet>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyTitle="No knowledge areas yet"
-            emptyDescription="Create the first knowledge area to populate the table."
-          />
+          {isLoading ? (
+            <div className="flex min-h-[280px] items-center justify-center rounded-2xl border bg-muted/20">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Loading knowledge areas...
+              </div>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={rows}
+              emptyTitle="No knowledge areas yet"
+              emptyDescription="Use Create Knowledge Area to add the first record."
+            />
+          )}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function splitAliases(value: string): string[] {
+  return value
+    .split(",")
+    .map((alias) => alias.trim())
+    .filter(Boolean);
+}
+
+function toNullable(value?: string): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
 }
 
 function formatDate(value: string): string {
