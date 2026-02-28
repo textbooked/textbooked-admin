@@ -18,6 +18,11 @@ import knowledgeAreaAdminGetOneMutator from '../axios';
 import knowledgeAreaAdminUpdateMutator from '../axios';
 import knowledgeAreaAdminRemoveMutator from '../axios';
 import knowledgeAreaAdminCreateMutator from '../axios';
+import conceptAdminListMutator from '../axios';
+import conceptAdminGetOneMutator from '../axios';
+import conceptAdminUpdateMutator from '../axios';
+import conceptAdminRemoveMutator from '../axios';
+import conceptAdminCreateMutator from '../axios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -100,10 +105,82 @@ const knowledgeAreaAdminCreate = (
       options);
     }
   
-return {adminAuthGetMe,knowledgeAreaAdminList,knowledgeAreaAdminGetOne,knowledgeAreaAdminUpdate,knowledgeAreaAdminRemove,knowledgeAreaAdminCreate}};
+/**
+ * @summary List records for an admin-managed entity
+ */
+const conceptAdminList = (
+    adminListDto: AdminListDto,
+ options?: SecondParameter<typeof conceptAdminListMutator>,) => {
+      return conceptAdminListMutator<void>(
+      {url: `/admin/concept/list`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminListDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Get one record by id
+ */
+const conceptAdminGetOne = (
+    id: string,
+ options?: SecondParameter<typeof conceptAdminGetOneMutator>,) => {
+      return conceptAdminGetOneMutator<void>(
+      {url: `/admin/concept/${id}`, method: 'GET'
+    },
+      options);
+    }
+  
+/**
+ * @summary Update a record by id
+ */
+const conceptAdminUpdate = (
+    id: string,
+    adminUpdateDto: AdminUpdateDto,
+ options?: SecondParameter<typeof conceptAdminUpdateMutator>,) => {
+      return conceptAdminUpdateMutator<void>(
+      {url: `/admin/concept/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateDto
+    },
+      options);
+    }
+  
+/**
+ * @summary Delete a record by id
+ */
+const conceptAdminRemove = (
+    id: string,
+ options?: SecondParameter<typeof conceptAdminRemoveMutator>,) => {
+      return conceptAdminRemoveMutator<void>(
+      {url: `/admin/concept/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+/**
+ * @summary Create a record
+ */
+const conceptAdminCreate = (
+    adminCreateDto: AdminCreateDto,
+ options?: SecondParameter<typeof conceptAdminCreateMutator>,) => {
+      return conceptAdminCreateMutator<void>(
+      {url: `/admin/concept`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateDto
+    },
+      options);
+    }
+  
+return {adminAuthGetMe,knowledgeAreaAdminList,knowledgeAreaAdminGetOne,knowledgeAreaAdminUpdate,knowledgeAreaAdminRemove,knowledgeAreaAdminCreate,conceptAdminList,conceptAdminGetOne,conceptAdminUpdate,conceptAdminRemove,conceptAdminCreate}};
 export type AdminAuthGetMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['adminAuthGetMe']>>>
 export type KnowledgeAreaAdminListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminList']>>>
 export type KnowledgeAreaAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminGetOne']>>>
 export type KnowledgeAreaAdminUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminUpdate']>>>
 export type KnowledgeAreaAdminRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminRemove']>>>
 export type KnowledgeAreaAdminCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminCreate']>>>
+export type ConceptAdminListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminList']>>>
+export type ConceptAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminGetOne']>>>
+export type ConceptAdminUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminUpdate']>>>
+export type ConceptAdminRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminRemove']>>>
+export type ConceptAdminCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminCreate']>>>
