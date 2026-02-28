@@ -2,15 +2,25 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type ColumnDef } from "@tanstack/react-table";
-import { Plus, Sparkles } from "lucide-react";
-import { useState } from "react";
+import type { AxiosError } from "axios";
+import { FolderPlus, Loader2, Pencil, RefreshCcw, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { FormCommaListField } from "@/components/forms/form-comma-list-field";
 import { FormTextField } from "@/components/forms/form-text-field";
 import { FormTextareaField } from "@/components/forms/form-textarea-field";
+import {
+  useConceptAdminCreate,
+  useConceptAdminList,
+  useConceptAdminRemove,
+  useConceptAdminUpdate,
+} from "@/lib/api/generated/admin-client";
+import type { AdminCreateDto, AdminListDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
+import { getApiErrorMessage, type ApiErrorBody } from "@/lib/api/get-api-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,51 +40,138 @@ type ConceptRow = {
   name: string;
   slug: string;
   aliases: string[];
-  description?: string;
+  description?: string | null;
   updatedAt: string;
+};
+
+type AdminListResponse<T> = {
+  data: T[];
+  total: number;
 };
 
 const conceptFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z.string().min(1, "Slug is required"),
   aliases: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
 });
 
 type ConceptFormValues = z.infer<typeof conceptFormSchema>;
 
-const initialConcepts: ConceptRow[] = [
-  {
-    id: "c1",
-    name: "Photosynthesis",
-    slug: "photosynthesis",
-    aliases: ["photo synthesis", "light reaction overview"],
-    description: "Core concept linking light-dependent and light-independent reactions.",
-    updatedAt: "2026-02-21T10:12:00.000Z",
-  },
-  {
-    id: "c2",
-    name: "Newton's Second Law",
-    slug: "newtons-second-law",
-    aliases: ["F=ma"],
-    description: "Relationship between force, mass, and acceleration.",
-    updatedAt: "2026-02-24T16:45:00.000Z",
-  },
-];
+const defaultValues: ConceptFormValues = {
+  name: "",
+  slug: "",
+  aliases: "",
+  description: "",
+};
 
 export default function ConceptsPage() {
-  const [rows, setRows] = useState<ConceptRow[]>(initialConcepts);
-  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<ConceptRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeRow, setActiveRow] = useState<ConceptRow | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const listMutation = useConceptAdminList<AxiosError<ApiErrorBody>>();
+  const createMutation = useConceptAdminCreate<AxiosError<ApiErrorBody>>();
+  const updateMutation = useConceptAdminUpdate<AxiosError<ApiErrorBody>>();
+  const removeMutation = useConceptAdminRemove<AxiosError<ApiErrorBody>>();
 
   const form = useForm<ConceptFormValues>({
     resolver: zodResolver(conceptFormSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      aliases: "",
-      description: "",
-    },
+    defaultValues,
   });
+
+  const isLoading = listMutation.isPending && rows.length === 0;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  async function loadRows() {
+    try {
+      const payload: AdminListDto = {
+        pagination: { page: 1, perPage: 100 },
+        sort: { field: "updatedAt", order: "DESC" },
+      };
+
+      const result =
+        (await listMutation.mutateAsync({ data: payload })) as unknown as AdminListResponse<ConceptRow>;
+
+      setRows(Array.isArray(result?.data) ? result.data : []);
+      setTotal(typeof result?.total === "number" ? result.total : result?.data?.length ?? 0);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to load concepts."));
+    }
+  }
+
+  useEffect(() => {
+    void loadRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function openCreate() {
+    setActiveRow(null);
+    form.reset(defaultValues);
+    setSheetOpen(true);
+  }
+
+  function openEdit(row: ConceptRow) {
+    setActiveRow(row);
+    form.reset({
+      name: row.name,
+      slug: row.slug,
+      aliases: row.aliases.join(", "),
+      description: row.description ?? "",
+    });
+    setSheetOpen(true);
+  }
+
+  function closeSheet() {
+    setActiveRow(null);
+    form.reset(defaultValues);
+    setSheetOpen(false);
+  }
+
+  async function handleDelete(row: ConceptRow) {
+    if (!window.confirm(`Delete concept "${row.name}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(row.id);
+      await removeMutation.mutateAsync({ id: row.id });
+      toast.success("Concept deleted.");
+      await loadRows();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to delete concept."));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function onSubmit(values: ConceptFormValues) {
+    const data = {
+      name: values.name.trim(),
+      slug: values.slug.trim(),
+      aliases: splitAliases(values.aliases),
+      description: toNullable(values.description),
+    };
+
+    try {
+      if (activeRow) {
+        const payload: AdminUpdateDto = { data };
+        await updateMutation.mutateAsync({ id: activeRow.id, data: payload });
+        toast.success("Concept updated.");
+      } else {
+        const payload: AdminCreateDto = { data };
+        await createMutation.mutateAsync({ data: payload });
+        toast.success("Concept created.");
+      }
+
+      closeSheet();
+      await loadRows();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to save concept."));
+    }
+  }
 
   const columns: ColumnDef<ConceptRow>[] = [
     {
@@ -83,7 +180,7 @@ export default function ConceptsPage() {
       cell: ({ row }) => (
         <div className="space-y-1">
           <div className="font-medium">{row.original.name}</div>
-          {row.original.aliases.length ? (
+          {row.original.aliases.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {row.original.aliases.slice(0, 3).map((alias) => (
                 <Badge key={alias} variant="outline" className="rounded-lg">
@@ -110,38 +207,30 @@ export default function ConceptsPage() {
     {
       id: "actions",
       header: "Actions",
-      cell: () => (
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" className="rounded-lg">
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => openEdit(row.original)}>
+            <Pencil className="size-4" />
             Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-destructive hover:text-destructive"
+            disabled={deletingId === row.original.id}
+            onClick={() => void handleDelete(row.original)}
+          >
+            {deletingId === row.original.id ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4" />
+            )}
+            Delete
           </Button>
         </div>
       ),
     },
   ];
-
-  async function onSubmit(values: ConceptFormValues) {
-    const normalizedAliases = values.aliases
-      .split(",")
-      .map((alias) => alias.trim())
-      .filter(Boolean);
-
-    // TODO: Replace local state with Orval-generated hooks once admin endpoints are finalized.
-    setRows((prev) => [
-      {
-        id: crypto.randomUUID(),
-        name: values.name,
-        slug: values.slug,
-        aliases: normalizedAliases,
-        description: values.description || undefined,
-        updatedAt: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
-
-    form.reset();
-    setOpen(false);
-  }
 
   return (
     <div className="space-y-6">
@@ -151,34 +240,49 @@ export default function ConceptsPage() {
             <CardTitle className="flex items-center gap-2">
               Concepts
               <Badge variant="outline" className="rounded-lg">
-                Skeleton
+                Live API
               </Badge>
             </CardTitle>
-            <CardDescription>
-              Table + create flow scaffold for concept operations. Data is mocked locally for now.
-            </CardDescription>
+            <CardDescription>Connected to admin CRUD endpoints via generated Orval hooks.</CardDescription>
           </div>
 
-          <Sheet open={open} onOpenChange={setOpen}>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="rounded-lg">
+              {total} total
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => void loadRows()}
+              disabled={listMutation.isPending}
+            >
+              {listMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCcw className="size-4" />
+              )}
+              Refresh
+            </Button>
+          </div>
+
+          <Sheet open={sheetOpen} onOpenChange={(open) => (open ? setSheetOpen(true) : closeSheet())}>
             <SheetTrigger asChild>
-              <Button className="rounded-xl">
-                <Plus className="size-4" />
+              <Button className="rounded-xl" onClick={openCreate}>
+                <FolderPlus className="size-4" />
                 Create Concept
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:max-w-xl">
               <SheetHeader>
-                <SheetTitle>Create Concept</SheetTitle>
+                <SheetTitle>{activeRow ? "Edit Concept" : "Create Concept"}</SheetTitle>
                 <SheetDescription>
-                  Capture a concept record skeleton. API integration is intentionally stubbed.
+                  Manage canonical concept records used across admin workflows.
                 </SheetDescription>
               </SheetHeader>
 
               <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex h-full flex-col gap-4 px-4 pb-4"
-                >
+                <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full flex-col gap-4 px-4 pb-4">
                   <FormTextField control={form.control} name="name" label="Name" />
                   <FormTextField
                     control={form.control}
@@ -191,29 +295,16 @@ export default function ConceptsPage() {
                     control={form.control}
                     name="description"
                     label="Description"
-                    placeholder="Short editorial description or notes..."
                     rows={6}
+                    placeholder="Short editorial description or notes..."
                   />
 
-                  <div className="rounded-xl border bg-muted/40 p-3 text-xs text-muted-foreground">
-                    <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
-                      <Sparkles className="size-3.5" />
-                      Stubbed submission
-                    </div>
-                    Local state only. Wire this form to Orval hooks when admin concept endpoints are
-                    available.
-                  </div>
-
                   <SheetFooter className="mt-auto px-0 pb-0">
-                    <Button type="submit" className="rounded-xl">
-                      Save Concept
+                    <Button type="submit" className="rounded-xl" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
+                      {activeRow ? "Save Changes" : "Save Concept"}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => setOpen(false)}
-                    >
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={closeSheet}>
                       Cancel
                     </Button>
                   </SheetFooter>
@@ -223,16 +314,37 @@ export default function ConceptsPage() {
           </Sheet>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={columns}
-            data={rows}
-            emptyTitle="No concepts yet"
-            emptyDescription="Use Create Concept to add the first concept record."
-          />
+          {isLoading ? (
+            <div className="flex min-h-[280px] items-center justify-center rounded-2xl border bg-muted/20">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Loading concepts...
+              </div>
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={rows}
+              emptyTitle="No concepts yet"
+              emptyDescription="Use Create Concept to add the first record."
+            />
+          )}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function splitAliases(value: string): string[] {
+  return value
+    .split(",")
+    .map((alias) => alias.trim())
+    .filter(Boolean);
+}
+
+function toNullable(value?: string): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
 }
 
 function formatDate(value: string): string {
