@@ -1,25 +1,28 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { type ColumnDef } from "@tanstack/react-table";
+import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
-import { FolderPlus, Loader2, Pencil, RefreshCcw, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { FolderPlus, Link2, Loader2, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 
-import { DataTable } from "@/components/data-table/data-table";
+import { ConceptLinksSheet } from "@/app/(admin)/concepts/components/links-sheet";
+import type { ConceptFormValues, ConceptRow, ConceptSummary } from "@/app/(admin)/concepts/types";
+import { getListRows, getListTotal } from "@/components/table/list-result";
+import { EntityTable } from "@/components/table/table";
+import { useEntityTableState } from "@/components/table/use-table-state";
 import { FormCommaListField } from "@/components/forms/form-comma-list-field";
 import { FormTextField } from "@/components/forms/form-text-field";
 import { FormTextareaField } from "@/components/forms/form-textarea-field";
 import {
+  conceptAdminList,
   useConceptAdminCreate,
-  useConceptAdminList,
   useConceptAdminRemove,
   useConceptAdminUpdate,
 } from "@/lib/api/generated/admin-client";
-import type { AdminCreateDto, AdminListDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
+import type { AdminCreateDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
 import { getApiErrorMessage, type ApiErrorBody } from "@/lib/api/get-api-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,29 +38,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-type ConceptRow = {
-  id: string;
-  name: string;
-  slug: string;
-  aliases: string[];
-  description?: string | null;
-  updatedAt: string;
-};
-
-type AdminListResponse<T> = {
-  data: T[];
-  total: number;
-};
-
-const conceptFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required"),
-  aliases: z.string(),
-  description: z.string().optional(),
-});
-
-type ConceptFormValues = z.infer<typeof conceptFormSchema>;
-
 const defaultValues: ConceptFormValues = {
   name: "",
   slug: "",
@@ -66,46 +46,28 @@ const defaultValues: ConceptFormValues = {
 };
 
 export default function ConceptsPage() {
-  const [rows, setRows] = useState<ConceptRow[]>([]);
-  const [total, setTotal] = useState(0);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [linksSheetOpen, setLinksSheetOpen] = useState(false);
+  const [linksConcept, setLinksConcept] = useState<ConceptSummary | null>(null);
   const [activeRow, setActiveRow] = useState<ConceptRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const listMutation = useConceptAdminList<AxiosError<ApiErrorBody>>();
   const createMutation = useConceptAdminCreate<AxiosError<ApiErrorBody>>();
   const updateMutation = useConceptAdminUpdate<AxiosError<ApiErrorBody>>();
   const removeMutation = useConceptAdminRemove<AxiosError<ApiErrorBody>>();
+  const table = useEntityTableState({ initialSortField: null, initialSortOrder: null, initialPerPage: 100 });
 
-  const form = useForm<ConceptFormValues>({
-    resolver: zodResolver(conceptFormSchema),
-    defaultValues,
+  const form = useForm<ConceptFormValues>({ defaultValues });
+
+  const listQuery = useQuery({
+    queryKey: ["admin-concepts-list", table.payload],
+    queryFn: ({ signal }) => conceptAdminList(table.payload, undefined, signal),
   });
 
-  const isLoading = listMutation.isPending && rows.length === 0;
+  const rows = getListRows<ConceptRow>(listQuery.data);
+  const total = getListTotal(listQuery.data);
+  const isLoading = listQuery.isLoading;
   const isSaving = createMutation.isPending || updateMutation.isPending;
-
-  async function loadRows() {
-    try {
-      const payload: AdminListDto = {
-        pagination: { page: 1, perPage: 100 },
-        sort: { field: "updatedAt", order: "DESC" },
-      };
-
-      const result =
-        (await listMutation.mutateAsync({ data: payload })) as unknown as AdminListResponse<ConceptRow>;
-
-      setRows(Array.isArray(result?.data) ? result.data : []);
-      setTotal(typeof result?.total === "number" ? result.total : result?.data?.length ?? 0);
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, "Failed to load concepts."));
-    }
-  }
-
-  useEffect(() => {
-    void loadRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function openCreate() {
     setActiveRow(null);
@@ -124,6 +86,15 @@ export default function ConceptsPage() {
     setSheetOpen(true);
   }
 
+  function openLinks(row: ConceptRow) {
+    setLinksConcept({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+    });
+    setLinksSheetOpen(true);
+  }
+
   function closeSheet() {
     setActiveRow(null);
     form.reset(defaultValues);
@@ -139,7 +110,7 @@ export default function ConceptsPage() {
       setDeletingId(row.id);
       await removeMutation.mutateAsync({ id: row.id });
       toast.success("Concept deleted.");
-      await loadRows();
+      await listQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Failed to delete concept."));
     } finally {
@@ -148,11 +119,27 @@ export default function ConceptsPage() {
   }
 
   async function onSubmit(values: ConceptFormValues) {
+    const name = values.name.trim();
+    const slug = values.slug.trim();
+
+    if (!name || !slug) {
+      if (!name) {
+        form.setError("name", { type: "manual", message: "Name is required" });
+      }
+      if (!slug) {
+        form.setError("slug", { type: "manual", message: "Slug is required" });
+      }
+      return;
+    }
+
     const data = {
-      name: values.name.trim(),
-      slug: values.slug.trim(),
-      aliases: splitAliases(values.aliases),
-      description: toNullable(values.description),
+      name,
+      slug,
+      aliases: values.aliases
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+      description: values.description.trim() || null,
     };
 
     try {
@@ -167,7 +154,7 @@ export default function ConceptsPage() {
       }
 
       closeSheet();
-      await loadRows();
+      await listQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Failed to save concept."));
     }
@@ -209,6 +196,10 @@ export default function ConceptsPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => openLinks(row.original)}>
+            <Link2 className="size-4" />
+            Links
+          </Button>
           <Button variant="ghost" size="sm" className="rounded-lg" onClick={() => openEdit(row.original)}>
             <Pencil className="size-4" />
             Edit
@@ -244,26 +235,6 @@ export default function ConceptsPage() {
               </Badge>
             </CardTitle>
             <CardDescription>Connected to admin CRUD endpoints via generated Orval hooks.</CardDescription>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="rounded-lg">
-              {total} total
-            </Badge>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-xl"
-              onClick={() => void loadRows()}
-              disabled={listMutation.isPending}
-            >
-              {listMutation.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCcw className="size-4" />
-              )}
-              Refresh
-            </Button>
           </div>
 
           <Sheet open={sheetOpen} onOpenChange={(open) => (open ? setSheetOpen(true) : closeSheet())}>
@@ -314,37 +285,34 @@ export default function ConceptsPage() {
           </Sheet>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex min-h-[280px] items-center justify-center rounded-2xl border bg-muted/20">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" />
-                Loading concepts...
-              </div>
-            </div>
-          ) : (
-            <DataTable
-              columns={columns}
-              data={rows}
-              emptyTitle="No concepts yet"
-              emptyDescription="Use Create Concept to add the first record."
-            />
-          )}
+          <EntityTable
+            columns={columns}
+            rows={rows}
+            total={total}
+            isLoading={isLoading}
+            controller={table}
+            searchPlaceholder="Search concepts..."
+            loadingLabel="Loading concepts..."
+            emptyTitle="No concepts yet"
+            emptyDescription="Use Create Concept to add the first record."
+            onRefresh={() => void listQuery.refetch()}
+            isRefreshing={listQuery.isFetching}
+          />
         </CardContent>
       </Card>
+
+      <ConceptLinksSheet
+        concept={linksConcept}
+        open={linksSheetOpen}
+        onOpenChange={(nextOpen) => {
+          setLinksSheetOpen(nextOpen);
+          if (!nextOpen) {
+            setLinksConcept(null);
+          }
+        }}
+      />
     </div>
   );
-}
-
-function splitAliases(value: string): string[] {
-  return value
-    .split(",")
-    .map((alias) => alias.trim())
-    .filter(Boolean);
-}
-
-function toNullable(value?: string): string | null {
-  const normalized = value?.trim();
-  return normalized ? normalized : null;
 }
 
 function formatDate(value: string): string {
