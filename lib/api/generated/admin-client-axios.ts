@@ -8,6 +8,8 @@
 import type {
   AdminCreateDto,
   AdminListDto,
+  AdminListResponseDto,
+  AdminRecordResponseDto,
   AdminUpdateDto,
   CurrentAdminUserDto
 } from './schemas';
@@ -23,6 +25,11 @@ import conceptAdminGetOneMutator from '../axios';
 import conceptAdminUpdateMutator from '../axios';
 import conceptAdminRemoveMutator from '../axios';
 import conceptAdminCreateMutator from '../axios';
+import conceptEdgeAdminListMutator from '../axios';
+import conceptEdgeAdminGetOneMutator from '../axios';
+import conceptEdgeAdminUpdateMutator from '../axios';
+import conceptEdgeAdminRemoveMutator from '../axios';
+import conceptEdgeAdminCreateMutator from '../axios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -38,13 +45,10 @@ const adminAuthGetMe = (
       options);
     }
   
-/**
- * @summary List records for an admin-managed entity
- */
 const knowledgeAreaAdminList = (
     adminListDto: AdminListDto,
  options?: SecondParameter<typeof knowledgeAreaAdminListMutator>,) => {
-      return knowledgeAreaAdminListMutator<void>(
+      return knowledgeAreaAdminListMutator<AdminListResponseDto>(
       {url: `/admin/knowledge-area/list`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminListDto
@@ -52,26 +56,20 @@ const knowledgeAreaAdminList = (
       options);
     }
   
-/**
- * @summary Get one record by id
- */
 const knowledgeAreaAdminGetOne = (
     id: string,
  options?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>,) => {
-      return knowledgeAreaAdminGetOneMutator<void>(
+      return knowledgeAreaAdminGetOneMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'GET'
     },
       options);
     }
   
-/**
- * @summary Update a record by id
- */
 const knowledgeAreaAdminUpdate = (
     id: string,
     adminUpdateDto: AdminUpdateDto,
  options?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>,) => {
-      return knowledgeAreaAdminUpdateMutator<void>(
+      return knowledgeAreaAdminUpdateMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: adminUpdateDto
@@ -79,25 +77,19 @@ const knowledgeAreaAdminUpdate = (
       options);
     }
   
-/**
- * @summary Delete a record by id
- */
 const knowledgeAreaAdminRemove = (
     id: string,
  options?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>,) => {
-      return knowledgeAreaAdminRemoveMutator<void>(
+      return knowledgeAreaAdminRemoveMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'DELETE'
     },
       options);
     }
   
-/**
- * @summary Create a record
- */
 const knowledgeAreaAdminCreate = (
     adminCreateDto: AdminCreateDto,
  options?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>,) => {
-      return knowledgeAreaAdminCreateMutator<void>(
+      return knowledgeAreaAdminCreateMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminCreateDto
@@ -105,13 +97,10 @@ const knowledgeAreaAdminCreate = (
       options);
     }
   
-/**
- * @summary List records for an admin-managed entity
- */
 const conceptAdminList = (
     adminListDto: AdminListDto,
  options?: SecondParameter<typeof conceptAdminListMutator>,) => {
-      return conceptAdminListMutator<void>(
+      return conceptAdminListMutator<AdminListResponseDto>(
       {url: `/admin/concept/list`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminListDto
@@ -119,26 +108,20 @@ const conceptAdminList = (
       options);
     }
   
-/**
- * @summary Get one record by id
- */
 const conceptAdminGetOne = (
     id: string,
  options?: SecondParameter<typeof conceptAdminGetOneMutator>,) => {
-      return conceptAdminGetOneMutator<void>(
+      return conceptAdminGetOneMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'GET'
     },
       options);
     }
   
-/**
- * @summary Update a record by id
- */
 const conceptAdminUpdate = (
     id: string,
     adminUpdateDto: AdminUpdateDto,
  options?: SecondParameter<typeof conceptAdminUpdateMutator>,) => {
-      return conceptAdminUpdateMutator<void>(
+      return conceptAdminUpdateMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: adminUpdateDto
@@ -146,25 +129,19 @@ const conceptAdminUpdate = (
       options);
     }
   
-/**
- * @summary Delete a record by id
- */
 const conceptAdminRemove = (
     id: string,
  options?: SecondParameter<typeof conceptAdminRemoveMutator>,) => {
-      return conceptAdminRemoveMutator<void>(
+      return conceptAdminRemoveMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'DELETE'
     },
       options);
     }
   
-/**
- * @summary Create a record
- */
 const conceptAdminCreate = (
     adminCreateDto: AdminCreateDto,
  options?: SecondParameter<typeof conceptAdminCreateMutator>,) => {
-      return conceptAdminCreateMutator<void>(
+      return conceptAdminCreateMutator<AdminRecordResponseDto>(
       {url: `/admin/concept`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminCreateDto
@@ -172,7 +149,59 @@ const conceptAdminCreate = (
       options);
     }
   
-return {adminAuthGetMe,knowledgeAreaAdminList,knowledgeAreaAdminGetOne,knowledgeAreaAdminUpdate,knowledgeAreaAdminRemove,knowledgeAreaAdminCreate,conceptAdminList,conceptAdminGetOne,conceptAdminUpdate,conceptAdminRemove,conceptAdminCreate}};
+const conceptEdgeAdminList = (
+    adminListDto: AdminListDto,
+ options?: SecondParameter<typeof conceptEdgeAdminListMutator>,) => {
+      return conceptEdgeAdminListMutator<AdminListResponseDto>(
+      {url: `/admin/concept-edge/list`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminListDto
+    },
+      options);
+    }
+  
+const conceptEdgeAdminGetOne = (
+    id: string,
+ options?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>,) => {
+      return conceptEdgeAdminGetOneMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'GET'
+    },
+      options);
+    }
+  
+const conceptEdgeAdminUpdate = (
+    id: string,
+    adminUpdateDto: AdminUpdateDto,
+ options?: SecondParameter<typeof conceptEdgeAdminUpdateMutator>,) => {
+      return conceptEdgeAdminUpdateMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateDto
+    },
+      options);
+    }
+  
+const conceptEdgeAdminRemove = (
+    id: string,
+ options?: SecondParameter<typeof conceptEdgeAdminRemoveMutator>,) => {
+      return conceptEdgeAdminRemoveMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+const conceptEdgeAdminCreate = (
+    adminCreateDto: AdminCreateDto,
+ options?: SecondParameter<typeof conceptEdgeAdminCreateMutator>,) => {
+      return conceptEdgeAdminCreateMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateDto
+    },
+      options);
+    }
+  
+return {adminAuthGetMe,knowledgeAreaAdminList,knowledgeAreaAdminGetOne,knowledgeAreaAdminUpdate,knowledgeAreaAdminRemove,knowledgeAreaAdminCreate,conceptAdminList,conceptAdminGetOne,conceptAdminUpdate,conceptAdminRemove,conceptAdminCreate,conceptEdgeAdminList,conceptEdgeAdminGetOne,conceptEdgeAdminUpdate,conceptEdgeAdminRemove,conceptEdgeAdminCreate}};
 export type AdminAuthGetMeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['adminAuthGetMe']>>>
 export type KnowledgeAreaAdminListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminList']>>>
 export type KnowledgeAreaAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['knowledgeAreaAdminGetOne']>>>
@@ -184,3 +213,8 @@ export type ConceptAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType
 export type ConceptAdminUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminUpdate']>>>
 export type ConceptAdminRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminRemove']>>>
 export type ConceptAdminCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptAdminCreate']>>>
+export type ConceptEdgeAdminListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptEdgeAdminList']>>>
+export type ConceptEdgeAdminGetOneResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptEdgeAdminGetOne']>>>
+export type ConceptEdgeAdminUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptEdgeAdminUpdate']>>>
+export type ConceptEdgeAdminRemoveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptEdgeAdminRemove']>>>
+export type ConceptEdgeAdminCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTextbookedBackendAdminAPI>['conceptEdgeAdminCreate']>>>

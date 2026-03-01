@@ -26,6 +26,8 @@ import type {
 import type {
   AdminCreateDto,
   AdminListDto,
+  AdminListResponseDto,
+  AdminRecordResponseDto,
   AdminUpdateDto,
   CurrentAdminUserDto
 } from './schemas';
@@ -41,6 +43,11 @@ import conceptAdminGetOneMutator from '../axios';
 import conceptAdminUpdateMutator from '../axios';
 import conceptAdminRemoveMutator from '../axios';
 import conceptAdminCreateMutator from '../axios';
+import conceptEdgeAdminListMutator from '../axios';
+import conceptEdgeAdminGetOneMutator from '../axios';
+import conceptEdgeAdminUpdateMutator from '../axios';
+import conceptEdgeAdminRemoveMutator from '../axios';
+import conceptEdgeAdminCreateMutator from '../axios';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -129,16 +136,13 @@ export function useAdminAuthGetMe<TData = Awaited<ReturnType<typeof adminAuthGet
 
 
 
-/**
- * @summary List records for an admin-managed entity
- */
 export const knowledgeAreaAdminList = (
     adminListDto: AdminListDto,
  options?: SecondParameter<typeof knowledgeAreaAdminListMutator>,signal?: AbortSignal
 ) => {
       
       
-      return knowledgeAreaAdminListMutator<void>(
+      return knowledgeAreaAdminListMutator<AdminListResponseDto>(
       {url: `/admin/knowledge-area/list`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminListDto, signal
@@ -177,10 +181,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type KnowledgeAreaAdminListMutationBody = AdminListDto
     export type KnowledgeAreaAdminListMutationError = void
 
-    /**
- * @summary List records for an admin-managed entity
- */
-export const useKnowledgeAreaAdminList = <TError = void,
+    export const useKnowledgeAreaAdminList = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminListMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof knowledgeAreaAdminList>>,
@@ -194,16 +195,13 @@ export const useKnowledgeAreaAdminList = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Get one record by id
- */
 export const knowledgeAreaAdminGetOne = (
     id: string,
  options?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>,signal?: AbortSignal
 ) => {
       
       
-      return knowledgeAreaAdminGetOneMutator<void>(
+      return knowledgeAreaAdminGetOneMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'GET', signal
     },
       options);
@@ -261,9 +259,6 @@ export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof kn
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get one record by id
- */
 
 export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError = void>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof knowledgeAreaAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof knowledgeAreaAdminGetOneMutator>}
@@ -282,16 +277,13 @@ export function useKnowledgeAreaAdminGetOne<TData = Awaited<ReturnType<typeof kn
 
 
 
-/**
- * @summary Update a record by id
- */
 export const knowledgeAreaAdminUpdate = (
     id: string,
     adminUpdateDto: AdminUpdateDto,
  options?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>,) => {
       
       
-      return knowledgeAreaAdminUpdateMutator<void>(
+      return knowledgeAreaAdminUpdateMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: adminUpdateDto
@@ -330,10 +322,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type KnowledgeAreaAdminUpdateMutationBody = AdminUpdateDto
     export type KnowledgeAreaAdminUpdateMutationError = void
 
-    /**
- * @summary Update a record by id
- */
-export const useKnowledgeAreaAdminUpdate = <TError = void,
+    export const useKnowledgeAreaAdminUpdate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminUpdateMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof knowledgeAreaAdminUpdate>>,
@@ -347,15 +336,12 @@ export const useKnowledgeAreaAdminUpdate = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Delete a record by id
- */
 export const knowledgeAreaAdminRemove = (
     id: string,
  options?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>,) => {
       
       
-      return knowledgeAreaAdminRemoveMutator<void>(
+      return knowledgeAreaAdminRemoveMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area/${id}`, method: 'DELETE'
     },
       options);
@@ -392,10 +378,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     
     export type KnowledgeAreaAdminRemoveMutationError = void
 
-    /**
- * @summary Delete a record by id
- */
-export const useKnowledgeAreaAdminRemove = <TError = void,
+    export const useKnowledgeAreaAdminRemove = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminRemoveMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof knowledgeAreaAdminRemove>>,
@@ -409,16 +392,13 @@ export const useKnowledgeAreaAdminRemove = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Create a record
- */
 export const knowledgeAreaAdminCreate = (
     adminCreateDto: AdminCreateDto,
  options?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>,signal?: AbortSignal
 ) => {
       
       
-      return knowledgeAreaAdminCreateMutator<void>(
+      return knowledgeAreaAdminCreateMutator<AdminRecordResponseDto>(
       {url: `/admin/knowledge-area`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminCreateDto, signal
@@ -457,10 +437,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type KnowledgeAreaAdminCreateMutationBody = AdminCreateDto
     export type KnowledgeAreaAdminCreateMutationError = void
 
-    /**
- * @summary Create a record
- */
-export const useKnowledgeAreaAdminCreate = <TError = void,
+    export const useKnowledgeAreaAdminCreate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof knowledgeAreaAdminCreateMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof knowledgeAreaAdminCreate>>,
@@ -474,16 +451,13 @@ export const useKnowledgeAreaAdminCreate = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary List records for an admin-managed entity
- */
 export const conceptAdminList = (
     adminListDto: AdminListDto,
  options?: SecondParameter<typeof conceptAdminListMutator>,signal?: AbortSignal
 ) => {
       
       
-      return conceptAdminListMutator<void>(
+      return conceptAdminListMutator<AdminListResponseDto>(
       {url: `/admin/concept/list`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminListDto, signal
@@ -522,10 +496,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ConceptAdminListMutationBody = AdminListDto
     export type ConceptAdminListMutationError = void
 
-    /**
- * @summary List records for an admin-managed entity
- */
-export const useConceptAdminList = <TError = void,
+    export const useConceptAdminList = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof conceptAdminListMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof conceptAdminList>>,
@@ -539,16 +510,13 @@ export const useConceptAdminList = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Get one record by id
- */
 export const conceptAdminGetOne = (
     id: string,
  options?: SecondParameter<typeof conceptAdminGetOneMutator>,signal?: AbortSignal
 ) => {
       
       
-      return conceptAdminGetOneMutator<void>(
+      return conceptAdminGetOneMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'GET', signal
     },
       options);
@@ -606,9 +574,6 @@ export function useConceptAdminGetOne<TData = Awaited<ReturnType<typeof conceptA
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof conceptAdminGetOneMutator>}
 
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get one record by id
- */
 
 export function useConceptAdminGetOne<TData = Awaited<ReturnType<typeof conceptAdminGetOne>>, TError = void>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof conceptAdminGetOneMutator>}
@@ -627,16 +592,13 @@ export function useConceptAdminGetOne<TData = Awaited<ReturnType<typeof conceptA
 
 
 
-/**
- * @summary Update a record by id
- */
 export const conceptAdminUpdate = (
     id: string,
     adminUpdateDto: AdminUpdateDto,
  options?: SecondParameter<typeof conceptAdminUpdateMutator>,) => {
       
       
-      return conceptAdminUpdateMutator<void>(
+      return conceptAdminUpdateMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'PATCH',
       headers: {'Content-Type': 'application/json', },
       data: adminUpdateDto
@@ -675,10 +637,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ConceptAdminUpdateMutationBody = AdminUpdateDto
     export type ConceptAdminUpdateMutationError = void
 
-    /**
- * @summary Update a record by id
- */
-export const useConceptAdminUpdate = <TError = void,
+    export const useConceptAdminUpdate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof conceptAdminUpdateMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof conceptAdminUpdate>>,
@@ -692,15 +651,12 @@ export const useConceptAdminUpdate = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Delete a record by id
- */
 export const conceptAdminRemove = (
     id: string,
  options?: SecondParameter<typeof conceptAdminRemoveMutator>,) => {
       
       
-      return conceptAdminRemoveMutator<void>(
+      return conceptAdminRemoveMutator<AdminRecordResponseDto>(
       {url: `/admin/concept/${id}`, method: 'DELETE'
     },
       options);
@@ -737,10 +693,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     
     export type ConceptAdminRemoveMutationError = void
 
-    /**
- * @summary Delete a record by id
- */
-export const useConceptAdminRemove = <TError = void,
+    export const useConceptAdminRemove = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof conceptAdminRemoveMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof conceptAdminRemove>>,
@@ -754,16 +707,13 @@ export const useConceptAdminRemove = <TError = void,
       return useMutation(mutationOptions);
     }
     
-/**
- * @summary Create a record
- */
 export const conceptAdminCreate = (
     adminCreateDto: AdminCreateDto,
  options?: SecondParameter<typeof conceptAdminCreateMutator>,signal?: AbortSignal
 ) => {
       
       
-      return conceptAdminCreateMutator<void>(
+      return conceptAdminCreateMutator<AdminRecordResponseDto>(
       {url: `/admin/concept`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: adminCreateDto, signal
@@ -802,10 +752,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ConceptAdminCreateMutationBody = AdminCreateDto
     export type ConceptAdminCreateMutationError = void
 
-    /**
- * @summary Create a record
- */
-export const useConceptAdminCreate = <TError = void,
+    export const useConceptAdminCreate = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof conceptAdminCreateMutator>}
 ): UseMutationResult<
         Awaited<ReturnType<typeof conceptAdminCreate>>,
@@ -815,6 +762,321 @@ export const useConceptAdminCreate = <TError = void,
       > => {
 
       const mutationOptions = getConceptAdminCreateMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+export const conceptEdgeAdminList = (
+    adminListDto: AdminListDto,
+ options?: SecondParameter<typeof conceptEdgeAdminListMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return conceptEdgeAdminListMutator<AdminListResponseDto>(
+      {url: `/admin/concept-edge/list`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminListDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getConceptEdgeAdminListMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminListMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminList>>, TError,{data: AdminListDto}, TContext> => {
+    
+const mutationKey = ['conceptEdgeAdminList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof conceptEdgeAdminList>>, {data: AdminListDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  conceptEdgeAdminList(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConceptEdgeAdminListMutationResult = NonNullable<Awaited<ReturnType<typeof conceptEdgeAdminList>>>
+    export type ConceptEdgeAdminListMutationBody = AdminListDto
+    export type ConceptEdgeAdminListMutationError = void
+
+    export const useConceptEdgeAdminList = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminList>>, TError,{data: AdminListDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminListMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof conceptEdgeAdminList>>,
+        TError,
+        {data: AdminListDto},
+        TContext
+      > => {
+
+      const mutationOptions = getConceptEdgeAdminListMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+export const conceptEdgeAdminGetOne = (
+    id: string,
+ options?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return conceptEdgeAdminGetOneMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+export const getConceptEdgeAdminGetOneQueryKey = (id: string,) => {
+    return [`/admin/concept-edge/${id}`] as const;
+    }
+
+    
+export const getConceptEdgeAdminGetOneQueryOptions = <TData = Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getConceptEdgeAdminGetOneQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>> = ({ signal }) => conceptEdgeAdminGetOne(id, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ConceptEdgeAdminGetOneQueryResult = NonNullable<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>>
+export type ConceptEdgeAdminGetOneQueryError = void
+
+
+export function useConceptEdgeAdminGetOne<TData = Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError = void>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>,
+          TError,
+          Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>}
+
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConceptEdgeAdminGetOne<TData = Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>,
+          TError,
+          Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useConceptEdgeAdminGetOne<TData = Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useConceptEdgeAdminGetOne<TData = Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError = void>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof conceptEdgeAdminGetOne>>, TError, TData>>, request?: SecondParameter<typeof conceptEdgeAdminGetOneMutator>}
+
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getConceptEdgeAdminGetOneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export const conceptEdgeAdminUpdate = (
+    id: string,
+    adminUpdateDto: AdminUpdateDto,
+ options?: SecondParameter<typeof conceptEdgeAdminUpdateMutator>,) => {
+      
+      
+      return conceptEdgeAdminUpdateMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: adminUpdateDto
+    },
+      options);
+    }
+  
+
+
+export const getConceptEdgeAdminUpdateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminUpdateMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext> => {
+    
+const mutationKey = ['conceptEdgeAdminUpdate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>, {id: string;data: AdminUpdateDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  conceptEdgeAdminUpdate(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConceptEdgeAdminUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>>
+    export type ConceptEdgeAdminUpdateMutationBody = AdminUpdateDto
+    export type ConceptEdgeAdminUpdateMutationError = void
+
+    export const useConceptEdgeAdminUpdate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>, TError,{id: string;data: AdminUpdateDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminUpdateMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof conceptEdgeAdminUpdate>>,
+        TError,
+        {id: string;data: AdminUpdateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getConceptEdgeAdminUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+export const conceptEdgeAdminRemove = (
+    id: string,
+ options?: SecondParameter<typeof conceptEdgeAdminRemoveMutator>,) => {
+      
+      
+      return conceptEdgeAdminRemoveMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge/${id}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getConceptEdgeAdminRemoveMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminRemoveMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminRemove>>, TError,{id: string}, TContext> => {
+    
+const mutationKey = ['conceptEdgeAdminRemove'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof conceptEdgeAdminRemove>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  conceptEdgeAdminRemove(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConceptEdgeAdminRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof conceptEdgeAdminRemove>>>
+    
+    export type ConceptEdgeAdminRemoveMutationError = void
+
+    export const useConceptEdgeAdminRemove = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminRemoveMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof conceptEdgeAdminRemove>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getConceptEdgeAdminRemoveMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+export const conceptEdgeAdminCreate = (
+    adminCreateDto: AdminCreateDto,
+ options?: SecondParameter<typeof conceptEdgeAdminCreateMutator>,signal?: AbortSignal
+) => {
+      
+      
+      return conceptEdgeAdminCreateMutator<AdminRecordResponseDto>(
+      {url: `/admin/concept-edge`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: adminCreateDto, signal
+    },
+      options);
+    }
+  
+
+
+export const getConceptEdgeAdminCreateMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminCreateMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminCreate>>, TError,{data: AdminCreateDto}, TContext> => {
+    
+const mutationKey = ['conceptEdgeAdminCreate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof conceptEdgeAdminCreate>>, {data: AdminCreateDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  conceptEdgeAdminCreate(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConceptEdgeAdminCreateMutationResult = NonNullable<Awaited<ReturnType<typeof conceptEdgeAdminCreate>>>
+    export type ConceptEdgeAdminCreateMutationBody = AdminCreateDto
+    export type ConceptEdgeAdminCreateMutationError = void
+
+    export const useConceptEdgeAdminCreate = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conceptEdgeAdminCreate>>, TError,{data: AdminCreateDto}, TContext>, request?: SecondParameter<typeof conceptEdgeAdminCreateMutator>}
+): UseMutationResult<
+        Awaited<ReturnType<typeof conceptEdgeAdminCreate>>,
+        TError,
+        {data: AdminCreateDto},
+        TContext
+      > => {
+
+      const mutationOptions = getConceptEdgeAdminCreateMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
