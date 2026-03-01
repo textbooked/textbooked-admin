@@ -4,7 +4,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { FolderPlus, Link2, Loader2, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -18,15 +18,23 @@ import { FormTextField } from "@/components/forms/form-text-field";
 import { FormTextareaField } from "@/components/forms/form-textarea-field";
 import {
   conceptAdminList,
+  knowledgeAreaAdminList,
   useConceptAdminCreate,
   useConceptAdminRemove,
   useConceptAdminUpdate,
 } from "@/lib/api/generated/admin-client";
-import type { AdminCreateDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
+import type { AdminCreateDto, AdminListDto, AdminUpdateDto } from "@/lib/api/generated/schemas";
 import { getApiErrorMessage, type ApiErrorBody } from "@/lib/api/get-api-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Form } from "@/components/ui/form";
 import {
   Sheet,
@@ -49,6 +57,7 @@ export default function ConceptsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [linksSheetOpen, setLinksSheetOpen] = useState(false);
   const [linksConcept, setLinksConcept] = useState<ConceptSummary | null>(null);
+  const [knowledgeAreaId, setKnowledgeAreaId] = useState("");
   const [activeRow, setActiveRow] = useState<ConceptRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -59,13 +68,51 @@ export default function ConceptsPage() {
 
   const form = useForm<ConceptFormValues>({ defaultValues });
 
+  const conceptListPayload = useMemo<AdminListDto>(() => {
+    if (!knowledgeAreaId) {
+      return table.payload;
+    }
+
+    return {
+      ...table.payload,
+      filter: {
+        ...(table.payload.filter ?? {}),
+        fields: {
+          ...(table.payload.filter?.fields ?? {}),
+          knowledgeAreas: {
+            some: {
+              knowledgeAreaId,
+            },
+          },
+        },
+      },
+    };
+  }, [knowledgeAreaId, table.payload]);
+
   const listQuery = useQuery({
-    queryKey: ["admin-concepts-list", table.payload],
-    queryFn: ({ signal }) => conceptAdminList(table.payload, undefined, signal),
+    queryKey: ["admin-concepts-list", conceptListPayload],
+    queryFn: ({ signal }) => conceptAdminList(conceptListPayload, undefined, signal),
+  });
+
+  const knowledgeAreasQuery = useQuery({
+    queryKey: ["admin-knowledge-area-options"],
+    queryFn: ({ signal }) =>
+      knowledgeAreaAdminList(
+        {
+          pagination: { page: 1, perPage: 300 },
+          sort: { field: "name", order: "ASC" },
+        },
+        undefined,
+        signal,
+      ),
   });
 
   const rows = getListRows<ConceptRow>(listQuery.data);
   const total = getListTotal(listQuery.data);
+  const knowledgeAreaOptions = getListRows<KnowledgeAreaFilterOption>(knowledgeAreasQuery.data).filter(
+    (item) => Boolean(item?.id && item?.name),
+  );
+  const selectedKnowledgeAreaName = knowledgeAreaOptions.find((item) => item.id === knowledgeAreaId)?.name;
   const isLoading = listQuery.isLoading;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
@@ -291,6 +338,28 @@ export default function ConceptsPage() {
             total={total}
             isLoading={isLoading}
             controller={table}
+            leftSlot={
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" className="rounded-xl">
+                    Knowledge Area: {selectedKnowledgeAreaName ?? "All"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuRadioGroup
+                    value={knowledgeAreaId || "__all__"}
+                    onValueChange={(value) => setKnowledgeAreaId(value === "__all__" ? "" : value)}
+                  >
+                    <DropdownMenuRadioItem value="__all__">All</DropdownMenuRadioItem>
+                    {knowledgeAreaOptions.map((item) => (
+                      <DropdownMenuRadioItem key={item.id} value={item.id}>
+                        {item.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            }
             searchPlaceholder="Search concepts..."
             loadingLabel="Loading concepts..."
             emptyTitle="No concepts yet"
@@ -320,5 +389,11 @@ function formatDate(value: string): string {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   }).format(new Date(value));
 }
+
+type KnowledgeAreaFilterOption = {
+  id: string;
+  name: string;
+};
