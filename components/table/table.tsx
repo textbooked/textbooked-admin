@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { Loader2, RefreshCcw } from "lucide-react";
+import type { ReactNode } from "react";
 
 import type { EntityTableController } from "@/components/table/types";
 import { DataTable } from "@/components/data-table/data-table";
@@ -16,6 +17,7 @@ type EntityTableProps<TData, TValue> = {
   isLoading: boolean;
   controller: EntityTableController;
   searchPlaceholder?: string;
+  leftSlot?: ReactNode;
   emptyTitle: string;
   emptyDescription: string;
   loadingLabel?: string;
@@ -30,6 +32,7 @@ export function EntityTable<TData, TValue>({
   isLoading,
   controller,
   searchPlaceholder,
+  leftSlot,
   emptyTitle,
   emptyDescription,
   loadingLabel,
@@ -46,6 +49,7 @@ export function EntityTable<TData, TValue>({
             placeholder={searchPlaceholder ?? "Search..."}
             className="max-w-md"
           />
+          {leftSlot}
         </div>
 
         <div className="flex items-center gap-2">
