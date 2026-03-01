@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronsUpDown, LogOut, Shield } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -16,12 +16,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Header() {
+type HeaderProps = {
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+};
+
+export function Header({ user }: HeaderProps) {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const title = getTitleFromPath(pathname);
-  const email = session?.user?.email ?? "admin";
-  const name = session?.user?.name ?? email;
+  const email = user?.email ?? "admin";
+  const name = user?.name ?? email;
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
@@ -40,7 +47,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="h-10 gap-2 rounded-xl px-2">
                 <Avatar className="size-7 border">
-                  <AvatarImage src={session?.user?.image ?? undefined} alt={name} />
+                  <AvatarImage src={user?.image ?? undefined} alt={name} />
                   <AvatarFallback>{getInitials(name)}</AvatarFallback>
                 </Avatar>
                 <span className="hidden max-w-[14rem] truncate text-left text-sm md:inline">

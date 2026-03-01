@@ -2,17 +2,19 @@
 
 import type { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useEffect, useLayoutEffect } from "react";
 
 import { appendAccessToken, removeHeader } from "@/lib/api/axios";
 import { useAdminAuthGetMe } from "@/lib/api/generated/admin-client";
 import type { AdminAuthGetMeQueryResult } from "@/lib/api/generated/admin-client";
 
-export function AdminBackendTokenSync() {
+type AdminBackendTokenSyncProps = {
+  token?: string;
+};
+
+export function AdminBackendTokenSync({ token }: AdminBackendTokenSyncProps) {
   const router = useRouter();
-  const { data: session } = useSession();
-  const token = session?.apiToken;
 
   useLayoutEffect(() => {
     if (token) {
