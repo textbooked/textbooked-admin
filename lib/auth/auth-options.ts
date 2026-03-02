@@ -31,9 +31,9 @@ export const authOptions: NextAuthOptions = {
         throw new Error("Google profile is missing required claims (sub/email).");
       }
 
-      const nextAuthSecret = resolveNonEmptyString(process.env.NEXTAUTH_SECRET);
-      if (!nextAuthSecret) {
-        throw new Error("Missing NEXTAUTH_SECRET.");
+      const apiJwtSecret = resolveNonEmptyString(process.env.BACKEND_JWT_SECRET);
+      if (!apiJwtSecret) {
+        throw new Error("Missing BACKEND_JWT_SECRET.");
       }
 
       const now = Math.floor(Date.now() / 1000);
@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
 
       if (shouldMintApiToken) {
         const expiresAt = now + 30 * 60;
-        const key = new TextEncoder().encode(nextAuthSecret);
+        const key = new TextEncoder().encode(apiJwtSecret);
 
         token.apiToken = await new SignJWT({
           sub: subject,
